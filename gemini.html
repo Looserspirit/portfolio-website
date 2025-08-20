@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Supabase Client Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>Futuristic Car Showcase</title>
+  <style>
+    :root {
+        --primary-color: #00e1ff;
+        --dark-bg: #0a0a0a;
+        --card-bg: #1a1a1a;
+        --text-light: #f4f4f4;
+        --text-muted: #aaa;
+        --border-color: #333;
+    }
+
+    /* Base styles */
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: var(--dark-bg);
+      color: var(--text-light);
+      overflow-x: hidden;
+    }
+    
+    body.loading {
+        overflow-y: hidden; /* Prevent scrolling during intro animation */
+    }
+
+    h1, h2, h3, .navbar-logo {
+        font-family: 'Orbitron', sans-serif;
+    }
+
+    /* --- Navbar Styles --- */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 5%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 90%;
+      z-index: 1000;
+      transition: background-color 0.4s ease, backdrop-filter 0.4s ease;
+    }
+
+    .navbar.scrolled {
+        background-color: rgba(10, 10, 10, 0.7);
+        backdrop-filter: blur(10px);
+    }
+
+    .navbar-logo {
+      font-size: 1.8rem;
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 25px;
+      margin: 0;
+      padding: 0;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      padding: 8px 15px;
+      border-radius: 5px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      background-color: var(--primary-color);
+      color: var(--dark-bg);
+    }
+    
+    /* --- Interactive Video Header --- */
+    .video-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      transition: opacity 0.5s ease-out;
+    }
+
+    .video-header video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      z-index: -2;
+    }
+    
+    .video-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        z-index: -1;
+    }
+
+    .video-header-content {
+        text-align: center;
+        color: white;
+        text-shadow: 0 0 10px rgba(0,0,0,0.6);
+        transition: opacity 0.5s ease-out;
+    }
+    
+    .video-header-content h1 {
+        font-size: 4rem;
+        letter-spacing: 2px;
+    }
+
+    /* --- Letter Animation --- */
+    .video-header-content h1 span {
+        opacity: 0;
+        animation: reveal-letter 1s forwards;
+    }
+
+    @keyframes reveal-letter {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Blinking/fading animation */
+    .video-header-content h1.loading-complete {
+        animation: blink-and-fade 0.8s forwards;
+        animation-delay: 0.1s;
+    }
+
+    @keyframes blink-and-fade {
+        0%, 50% { opacity: 1; }
+        25%, 75% { opacity: 0.2; }
+        100% { opacity: 0; visibility: hidden; }
+    }
+
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2.5rem;
+      color: white;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    /* --- Main Content Wrapper --- */
+    .main-content {
+        position: relative;
+        z-index: 2;
+        background: var(--dark-bg);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.5s ease-in-out;
+    }
+
+    /* --- General Section Styling --- */
+    .section {
+        padding: 100px 5%;
+        max-width: 1200px;
+        margin: 0 auto;
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .section.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .section-title {
+        text-align: center;
+        font-size: 2.8rem;
+        margin-bottom: 60px;
+        color: var(--primary-color);
+    }
+
+    /* --- Hero Slider Section --- */
+    .slider-container {
+        position: relative;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+        height: 600px;
+    }
+
+    .slide { display: none; height: 100%; }
+    .slide img { width: 100%; height: 100%; object-fit: cover; }
+    .slide::after {
+        content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(to top, rgba(0,0,0,0.7), transparent); z-index: 1;
+    }
+
+    .hero-content {
+        position: absolute; bottom: 50px; left: 50px; z-index: 2;
+        color: white; width: 80%;
+    }
+    .hero-content h1 { font-size: 3.5rem; margin-bottom: 10px; text-shadow: 2px 2px 8px rgba(0,0,0,0.7); }
+    .hero-content p { font-size: 1.3rem; margin-bottom: 20px; max-width: 500px; }
+
+    .btn {
+      display: inline-block; padding: 12px 25px; margin: 10px 10px 10px 0; border: 2px solid white;
+      border-radius: 5px; font-size: 1rem; font-weight: 500; cursor: pointer;
+      transition: all 0.3s ease; background: transparent; color: white;
+    }
+    .btn.primary { background: var(--primary-color); border-color: var(--primary-color); color: var(--dark-bg); }
+    .btn:hover { transform: scale(1.05); }
+
+    .prev, .next, .dots-container { z-index: 3; }
+    .prev, .next {
+        cursor: pointer; position: absolute; top: 50%; width: auto; padding: 16px; margin-top: -22px; color: white;
+        font-weight: bold; font-size: 20px; transition: 0.6s ease; border-radius: 0 3px 3px 0; user-select: none; background-color: rgba(0,0,0,0.5);
+    }
+    .next { right: 0; border-radius: 3px 0 0 3px; }
+    .prev:hover, .next:hover { background-color: rgba(0,0,0,0.8); }
+    .dots-container { text-align: center; padding: 10px; position: absolute; bottom: 10px; width: 100%; }
+    .dot { cursor: pointer; height: 15px; width: 15px; margin: 0 5px; background-color: rgba(255, 255, 255, 0.5);
+        border-radius: 50%; display: inline-block; transition: background-color 0.6s ease; }
+    .active, .dot:hover { background-color: #ffffff; }
+    .fade { animation: fade 1.5s; }
+    @keyframes fade { from {opacity: .4} to {opacity: 1} }
+
+    /* --- Features Section Styles --- */
+    .features { display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; }
+    .feature {
+      background: var(--card-bg); padding: 35px; border-radius: 15px; border: 1px solid var(--border-color);
+      width: 280px; text-align: center; color: var(--text-light); transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .feature:hover { transform: translateY(-8px); box-shadow: 0 10px 30px rgba(0, 225, 255, 0.15); }
+    .feature i { font-size: 2.5rem; color: var(--primary-color); margin-bottom: 20px; }
+    .feature h3 { margin-top: 0; font-size: 1.5rem; }
+    .feature p { color: var(--text-muted); }
+
+    /* --- Specifications Section --- */
+    .specs-container {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;
+        background: var(--card-bg); padding: 40px; border-radius: 15px; border: 1px solid var(--border-color);
+    }
+    .spec-item { text-align: center; }
+    .spec-item .value { font-size: 2.5rem; font-weight: bold; color: var(--primary-color); }
+    .spec-item .label { font-size: 1rem; color: var(--text-muted); }
+
+    /* --- Contact Section --- */
+    .contact-form { display: flex; flex-direction: column; gap: 20px; max-width: 700px; margin: 0 auto; }
+    .contact-form input, .contact-form textarea {
+        background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 5px;
+        padding: 15px; font-size: 1rem; color: var(--text-light);
+    }
+    .contact-form textarea { resize: vertical; min-height: 150px; }
+    .contact-form .btn { align-self: center; }
+
+    /* --- Footer --- */
+    footer {
+        text-align: center; padding: 40px 5%; background: #000;
+        border-top: 1px solid var(--border-color);
+    }
+    .social-links a { color: var(--text-muted); font-size: 1.5rem; margin: 0 15px; transition: color 0.3s ease; }
+    .social-links a:hover { color: var(--primary-color); }
+    .footer-text { margin-top: 20px; color: var(--text-muted); }
+
+  </style>
+</head>
+<body>
+
+  <header>
+    <nav class="navbar">
+      <a href="#" class="navbar-logo">FutureDrive</a>
+      <ul class="nav-links">
+          <li><a href="#hero">Home</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#specs">Specs</a></li>
+          <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  
+    <section class="video-header">
+      <video id="scroll-video" muted playsinline>
+        <source src="/last.mp4" type="video/mp4">
+        Your browser does not support HTML5 video.
+      </video>
+      <div class="video-header-content">
+          <h1 id="animated-title">FutureDrive</h1>
+      </div>
+      <div class="scroll-indicator"><i class="fa-solid fa-angles-down"></i></div>
+    </section>
+
+    <div class="main-content">
+        <main>
+            <section id="hero" class="section">
+            <div class="slider-container">
+                <div class="hero-content">
+                    <h1>Experience the Future</h1>
+                    <p>The new era of electric performance is here. Schedule a test drive and feel the silent power.</p>
+                    <div class="btn-group">
+                        <button class="btn primary">Custom Order</button>
+                        <button class="btn secondary">Explore Inventory</button>
+                    </div>
+                </div>
+                <div class="slide fade"><img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1740&auto-format&fit=crop" alt="Modern black sports car on a winding road"></div>
+                <div class="slide fade"><img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=1740&auto-format&fit=crop" alt="Bright yellow sports car front view"></div>
+                <div class="slide fade"><img src="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=1740&auto-format&fit=crop" alt="Classic red muscle car with white stripes"></div>
+                <div class="slide fade"><img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=1740&auto-format&fit=crop" alt="Sleek red sports car in motion"></div>
+                <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+                <a class="next" onclick="plusSlides(1)">&#10095;</a>
+                <div class="dots-container">
+                    <span class="dot" onclick="currentSlide(1)"></span><span class="dot" onclick="currentSlide(2)"></span>
+                    <span class="dot" onclick="currentSlide(3)"></span><span class="dot" onclick="currentSlide(4)"></span>
+                </div>
+            </div>
+            </section>
+
+            <section id="features" class="section">
+            <h2 class="section-title">Core Technology</h2>
+            <div class="features">
+                <div class="feature">
+                <i class="fas fa-bolt-lightning"></i><h3>Electric Power</h3><p>Unleash instant torque and zero emissions for a thrilling, sustainable drive.</p>
+                </div>
+                <div class="feature">
+                <i class="fas fa-palette"></i><h3>Sleek Design</h3><p>Crafted with elegance and aerodynamic precision for unmatched style.</p>
+                </div>
+                <div class="feature">
+                <i class="fas fa-robot"></i><h3>Autopilot</h3><p>Advanced driver assistance for enhanced safety and comfort on every journey.</p>
+                </div>
+            </div>
+            </section>
+
+            <section id="specs" class="section">
+                <h2 class="section-title">Specifications</h2>
+                <div class="specs-container">
+                    <div class="spec-item"><div class="value">1.9s</div><div class="label">0-60 mph</div></div>
+                    <div class="spec-item"><div class="value">400mi</div><div class="label">Range (EPA est.)</div></div>
+                    <div class="spec-item"><div class="value">1,020hp</div><div class="label">Peak Power</div></div>
+                    <div class="spec-item"><div class="value">AWD</div><div class="label">Drivetrain</div></div>
+                </div>
+            </section>
+
+            <section id="contact" class="section">
+                <h2 class="section-title">Get In Touch</h2>
+                <form class="contact-form" id="contact-form">
+                    <input type="text" name="name" placeholder="Your Name" required>
+                    <input type="email" name="email" placeholder="Your Email" required>
+                    <textarea name="message" placeholder="Your Message" required></textarea>
+                    <button type="submit" class="btn primary">Send Message</button>
+                </form>
+            </section>
+        </main>
+
+        <footer>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-youtube"></i></a>
+            </div>
+            <p class="footer-text">&copy; 2024 FutureDrive. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- CONFIGURATION ---
+        const SUPABASE_URL = 'https://iqulggzxpghwgimedrsz.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxdWxnZ3p4cGdod2dpbWVkcnN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1ODM3NzAsImV4cCI6MjA3MTE1OTc3MH0.4066-u8XDtWEuqNOLEpYQrS2uW2svg0_pJe9HA9chLM';
+        const VIDEO_SCROLL_DURATION = window.innerHeight * 2; // How many pixels of scroll control the video
+
+        // --- DOM ELEMENTS ---
+        const elements = {
+            video: document.getElementById('scroll-video'),
+            videoHeader: document.querySelector('.video-header'),
+            mainContent: document.querySelector('.main-content'),
+            scrollIndicator: document.querySelector('.scroll-indicator'),
+            animatedTitle: document.getElementById('animated-title'),
+            navbar: document.querySelector('.navbar'),
+            sections: document.querySelectorAll('.section'),
+            contactForm: document.getElementById('contact-form')
+        };
+
+        // --- SUPABASE CLIENT ---
+        let supabaseClient;
+        try {
+            if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            } else {
+                console.warn('Supabase credentials not set. Form submissions will not be saved.');
+            }
+        } catch (error) {
+            console.error("Error initializing Supabase:", error);
+        }
+        
+
+        /**
+         * Handles the initial title animation sequence.
+         */
+        function initTitleAnimation() {
+            document.body.classList.add('loading');
+            const titleText = elements.animatedTitle.textContent;
+            elements.animatedTitle.innerHTML = '';
+            const letters = titleText.split('');
+            letters.forEach((letter, i) => {
+                const span = document.createElement('span');
+                span.textContent = letter;
+                span.style.animationDelay = `${i * 0.05}s`;
+                elements.animatedTitle.appendChild(span);
+            });
+            
+            const revealDuration = letters.length * 50;
+            const pauseDuration = 100;
+            const blinkDuration = 800;
+            const totalIntroDuration = revealDuration + pauseDuration + blinkDuration;
+
+            setTimeout(() => {
+                elements.animatedTitle.classList.add('loading-complete');
+            }, revealDuration + pauseDuration);
+
+            setTimeout(() => {
+                document.body.classList.remove('loading');
+                elements.scrollIndicator.style.opacity = 1;
+                setupPageLayout();
+            }, totalIntroDuration);
+        }
+
+        /**
+         * Sets the body height and main content margin based on scroll duration.
+         */
+        function setupPageLayout() {
+            document.body.style.height = `${VIDEO_SCROLL_DURATION + elements.mainContent.offsetHeight}px`;
+            elements.mainContent.style.marginTop = `${VIDEO_SCROLL_DURATION}px`;
+        }
+
+        /**
+         * Handles the scroll-driven video playback and transitions.
+         */
+        function initScrollVideo() {
+            let animationFrame;
+            let targetTime = 0;
+
+            elements.video.addEventListener('loadedmetadata', () => elements.video.pause());
+
+            function updateOnScroll() {
+                const scrollTop = window.scrollY;
+                const scrollFraction = Math.min(1, scrollTop / VIDEO_SCROLL_DURATION);
+                
+                if (elements.video.duration && isFinite(elements.video.duration)) {
+                    targetTime = scrollFraction * elements.video.duration;
+                }
+
+                const transitionStart = VIDEO_SCROLL_DURATION - window.innerHeight;
+                if (scrollTop >= transitionStart) {
+                    const transitionFraction = (scrollTop - transitionStart) / (VIDEO_SCROLL_DURATION - transitionStart);
+                    elements.videoHeader.style.opacity = 1 - Math.min(1, transitionFraction);
+                    elements.mainContent.style.opacity = Math.min(1, transitionFraction);
+                    elements.mainContent.style.visibility = 'visible';
+                } else {
+                    elements.videoHeader.style.opacity = 1;
+                    elements.mainContent.style.opacity = 0;
+                    elements.mainContent.style.visibility = 'hidden';
+                }
+
+                if (scrollTop > 20) {
+                    elements.scrollIndicator.style.opacity = 0;
+                } else if (!document.body.classList.contains('loading')) {
+                    elements.scrollIndicator.style.opacity = 1;
+                }
+            }
+
+            function smoothUpdate() {
+                if (!isFinite(targetTime)) return;
+                const currentTime = elements.video.currentTime;
+                const delta = targetTime - currentTime;
+                
+                if (Math.abs(delta) > 0.01) {
+                    const newTime = currentTime + delta * 0.1;
+                    if (isFinite(newTime)) elements.video.currentTime = newTime;
+                    animationFrame = requestAnimationFrame(smoothUpdate);
+                } else {
+                    elements.video.currentTime = targetTime;
+                }
+            }
+
+            window.addEventListener('scroll', () => {
+                updateOnScroll();
+                cancelAnimationFrame(animationFrame);
+                animationFrame = requestAnimationFrame(smoothUpdate);
+            });
+        }
+
+        /**
+         * Adds a background to the navbar on scroll.
+         */
+        function initNavbar() {
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > VIDEO_SCROLL_DURATION) { 
+                    elements.navbar.classList.add('scrolled');
+                } else {
+                    elements.navbar.classList.remove('scrolled');
+                }
+            });
+        }
+
+        /**
+         * Fades in sections as they become visible.
+         */
+        function initSectionObserver() {
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('visible');
+                });
+            }, { threshold: 0.1 });
+            elements.sections.forEach(section => observer.observe(section));
+        }
+
+        /**
+         * Handles the contact form submission to Supabase.
+         */
+        function initContactForm() {
+            elements.contactForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (!supabaseClient) {
+                    console.error('Supabase client not initialized.');
+                    return;
+                }
+
+                const submitButton = elements.contactForm.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.textContent;
+                submitButton.textContent = 'Sending...';
+                submitButton.disabled = true;
+
+                const formData = new FormData(elements.contactForm);
+                const submission = {
+                    // FIX: Changed keys to match the user's table schema (Name, Email, Message)
+                    Name: formData.get('name'),
+                    Email: formData.get('email'),
+                    Message: formData.get('message'),
+                };
+                let errorOccurred = false;
+
+                try {
+                    const { error } = await supabaseClient.from('contacts').insert([submission]);
+                    if (error) throw error;
+                    submitButton.textContent = 'Message Sent!';
+                } catch (error) {
+                    errorOccurred = true;
+                    console.error('Error submitting form:', error.message);
+                    submitButton.textContent = 'Error!';
+                    submitButton.style.backgroundColor = 'red';
+                } finally {
+                    setTimeout(() => {
+                        submitButton.textContent = originalButtonText;
+                        submitButton.style.backgroundColor = '';
+                        submitButton.disabled = false;
+                        if (!errorOccurred) elements.contactForm.reset();
+                    }, 3000);
+                }
+            });
+        }
+
+        // --- Initialize All Page Functions ---
+        initTitleAnimation();
+        initScrollVideo();
+        initNavbar();
+        initSectionObserver();
+        initContactForm();
+    });
+
+    // --- Image Slider (kept global for inline HTML access) ---
+    let slideIndex = 1;
+    let slideInterval;
+    
+    function showSlides(n) {
+        let slides = document.getElementsByClassName("slide");
+        let dots = document.getElementsByClassName("dot");
+        if (n > slides.length) slideIndex = 1;
+        if (n < 1) slideIndex = slides.length;
+        for (let i = 0; i < slides.length; i++) {
+            slides[i].style.display = "none";
+        }
+        for (let i = 0; i < dots.length; i++) {
+            dots[i].className = dots[i].className.replace(" active", "");
+        }
+        slides[slideIndex-1].style.display = "block";
+        dots[slideIndex-1].className += " active";
+    }
+
+    function plusSlides(n) { showSlides(slideIndex += n); resetInterval(); }
+    function currentSlide(n) { showSlides(slideIndex = n); resetInterval(); }
+    function resetInterval() { 
+        clearInterval(slideInterval);
+        slideInterval = setInterval(() => plusSlides(1), 5000);
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        showSlides(slideIndex);
+        resetInterval();
+    });
+  </script>
+
+</body>
+</html>
