@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paper Trading — Market Watch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="loader-overlay" id="pageLoader">
+  <div class="spinner" aria-hidden="true"></div>
+  <span class="loader-text">Loading prices…</span>
+</div>
+
+<div class="board">
+
+  <nav class="nav">
+    <a href="index.html" class="nav__link">Market</a>
+    <a href="trade.html" class="nav__link nav__link--active">Paper Trading</a>
+  </nav>
+
+  <header class="board__header">
+    <div class="brand">
+      <span class="brand__eyebrow">Paper Trading</span>
+      <span class="brand__sub" id="statusLine">practice with fake money, real prices</span>
+    </div>
+    <div class="header__right">
+      <button class="refresh-btn" id="resetBtn" type="button" hidden>Reset demo</button>
+    </div>
+  </header>
+
+  <!-- Setup screen: shown until the user funds a demo account -->
+  <section class="hero" id="setupPanel">
+    <div class="hero__caption" style="margin-bottom: 14px;">start your demo account</div>
+    <div class="setup-form">
+      <span class="setup-form__prefix">$</span>
+      <input type="number" id="startingBalanceInput" class="input" min="1" step="1" placeholder="10,000" />
+      <button class="btn btn--primary" id="startBtn" type="button">Start trading</button>
+    </div>
+    <div class="hero__caption" style="margin-top: 10px;">no real money, no account needed — this resets when you reload the page</div>
+  </section>
+
+  <!-- Portfolio screen: shown once trading has started -->
+  <div id="portfolioView" hidden>
+
+    <section class="hero hero--stats">
+      <div class="stat">
+        <span class="stat__label">Cash</span>
+        <span class="stat__value" id="statCash">$0.00</span>
+      </div>
+      <div class="stat">
+        <span class="stat__label">Holdings</span>
+        <span class="stat__value" id="statHoldings">$0.00</span>
+      </div>
+      <div class="stat">
+        <span class="stat__label">Total value</span>
+        <span class="stat__value" id="statTotal">$0.00</span>
+      </div>
+      <div class="stat">
+        <span class="stat__label">P&amp;L</span>
+        <span class="stat__value" id="statPnl">$0.00</span>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__label"><span>Place a trade</span></div>
+      <div class="trade-form">
+        <select id="tickerSelect" class="input"></select>
+        <span class="trade-form__price" id="selectedPrice">$0.00</span>
+        <input type="number" id="qtyInput" class="input input--qty" min="1" step="1" value="1" />
+        <button class="btn btn--up" id="buyBtn" type="button">Buy</button>
+        <button class="btn btn--down" id="sellBtn" type="button">Sell</button>
+      </div>
+      <div class="form-error" id="tradeError" hidden></div>
+    </section>
+
+    <section class="section">
+      <div class="section__label"><span>Holdings</span></div>
+      <div class="table-wrap">
+        <table class="holdings-table">
+          <thead>
+            <tr><th>Symbol</th><th>Qty</th><th>Avg cost</th><th>Price</th><th>Value</th><th>P&amp;L</th></tr>
+          </thead>
+          <tbody id="holdingsBody"></tbody>
+        </table>
+        <p class="empty-note" id="holdingsEmpty">No positions yet — place your first trade above.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__label"><span>Trade log</span></div>
+      <ul class="ledger" id="tradeLog"></ul>
+      <p class="empty-note" id="logEmpty">No trades yet.</p>
+    </section>
+
+  </div>
+
+  <footer class="board__footer">
+    <span>Demo trades live only in this browser tab — refreshing resets everything. Prices come from the same feed as the Market page.</span>
+  </footer>
+
+</div>
+
+<script src="data.js"></script>
+<script src="trade.js"></script>
+</body>
+</html>

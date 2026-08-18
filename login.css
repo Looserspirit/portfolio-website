@@ -1,0 +1,93 @@
+:root {
+  --ink: #16241C;
+  --ink-dim: #6B776E;
+  --border: #E4E4E0;
+  --accent: #16241C;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #FFFFFF;
+  color: var(--ink);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login {
+  width: 100%;
+  max-width: 340px;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.login__eyebrow {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 10px;
+}
+
+.login__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.7rem;
+  margin: 0 0 28px;
+}
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login__input {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  padding: 12px 4px;
+  border: none;
+  border-bottom: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--ink);
+  text-align: center;
+  transition: border-color 0.15s ease;
+}
+.login__input::placeholder { color: #B8B8B2; }
+.login__input:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+
+.login__btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 12px 20px;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.login__btn:hover { opacity: 0.85; }
+.login__btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.login__error {
+  margin-top: 18px;
+  font-size: 0.85rem;
+  color: #B23B3B;
+}

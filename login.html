@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Watch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="login.css">
+</head>
+<body>
+
+<main class="login">
+  <span class="login__eyebrow">Market Watch</span>
+  <h1 class="login__title">Who's this for?</h1>
+
+  <form class="login__form" id="loginForm">
+    <input
+      type="text"
+      id="whoInput"
+      class="login__input"
+      placeholder="e.g. Admin"
+      autocomplete="off"
+      autofocus
+    />
+    <button type="submit" class="login__btn">Continue</button>
+  </form>
+
+  <p class="login__error" id="loginError" hidden>Didn't recognize that — try "Admin".</p>
+</main>
+
+<script src="login.js"></script>
+</body>
+</html>
