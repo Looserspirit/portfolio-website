@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Watch — Welcome</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+
+<main class="login">
+  <span class="login__eyebrow">Welcome to Market Watch</span>
+  <h1 class="login__title">Sign In to Continue</h1>
+
+  <form class="login__form" id="loginForm">
+    <input
+      type="text"
+      id="whoInput"
+      class="login__input"
+      placeholder="Enter your username"
+      autocomplete="off"
+      autofocus
+      required
+    />
+    <button type="submit" class="login__btn">Continue to Dashboard</button>
+  </form>
+
+  <p class="login__error" id="loginError" hidden>Please enter a valid username.</p>
+</main>
+
+<script>
+document.getElementById("loginForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+  const input = document.getElementById("whoInput");
+  const value = input.value.trim();
+
+  if (value) {
+    // Store current active profile in localStorage
+    localStorage.setItem("activeUser", value);
+    window.location.href = "index.html";
+  } else {
+    document.getElementById("loginError").hidden = false;
+  }
+});
+</script>
+</body>
+</html>
